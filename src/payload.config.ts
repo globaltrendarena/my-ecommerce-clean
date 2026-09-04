@@ -6,7 +6,6 @@ import {
   ItalicFeature,
   LinkFeature,
   OrderedListFeature,
-  TableFeature,
   UnderlineFeature,
   UnorderedListFeature,
   lexicalEditor,
@@ -73,7 +72,6 @@ export default buildConfig({
           },
         }),
         IndentFeature(),
-        TableFeature(),
       ]
     },
   }),
