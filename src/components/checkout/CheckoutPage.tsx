@@ -102,7 +102,7 @@ export const CheckoutPage: React.FC = () => {
         toast.error(errorMessage)
       }
     },
-    [billingAddress, billingAddressSameAsShipping, shippingAddress],
+    [billingAddress, billingAddressSameAsShipping, shippingAddress, email, initiatePayment],
   )
 
   if (!stripe) return null
@@ -354,7 +354,7 @@ export const CheckoutPage: React.FC = () => {
       {!cartIsEmpty && (
         <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 border-none bg-primary/5 flex flex-col gap-8 rounded-lg">
           <h2 className="text-3xl font-medium">Your cart</h2>
-          {cart?.items?.map((item, index) => {
+          {cart?.items?.map((item: any, index: number) => {
             if (typeof item.product === 'object' && item.product) {
               const {
                 product,
@@ -373,14 +373,14 @@ export const CheckoutPage: React.FC = () => {
               if (isVariant) {
                 price = variant?.priceInUSD
 
-                const imageVariant = product.gallery?.find((item) => {
-                  if (!item.variantOption) return false
+                const imageVariant = product.gallery?.find((gItem: any) => {
+                  if (!gItem.variantOption) return false
                   const variantOptionID =
-                    typeof item.variantOption === 'object'
-                      ? item.variantOption.id
-                      : item.variantOption
+                    typeof gItem.variantOption === 'object'
+                      ? gItem.variantOption.id
+                      : gItem.variantOption
 
-                  const hasMatch = variant?.options?.some((option) => {
+                  const hasMatch = variant?.options?.some((option: any) => {
                     if (typeof option === 'object') return option.id === variantOptionID
                     else return option === variantOptionID
                   })
@@ -408,10 +408,11 @@ export const CheckoutPage: React.FC = () => {
                       {variant && typeof variant === 'object' && (
                         <p className="text-sm font-mono text-primary/50 tracking-widest">
                           {variant.options
-                            ?.map((option) => {
+                            ?.map((option: any) => {
                               if (typeof option === 'object') return option.label
                               return null
                             })
+                            .filter(Boolean)
                             .join(', ')}
                         </p>
                       )}
