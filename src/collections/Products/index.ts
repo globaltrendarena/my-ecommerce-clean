@@ -208,8 +208,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     {
       name: 'slug',
-      type: 'slug',
-      useAsSlug: 'title',
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+      },
     },
   ],
 })
