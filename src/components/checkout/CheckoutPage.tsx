@@ -38,7 +38,7 @@ export const CheckoutPage: React.FC = () => {
   const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [emailEditable, setEmailEditable] = useState(true)
-  const [paymentData, setPaymentData] = useState<null | Record<string, unknown>>(null)
+  const [paymentData, setPaymentData] = useState<null | Record<string, any>>(null)
   const { initiatePayment } = usePayments()
   const { addresses } = useAddresses()
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
@@ -82,7 +82,7 @@ export const CheckoutPage: React.FC = () => {
             billingAddress,
             shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
           },
-        })) as Record<string, unknown>
+        })) as Record<string, any>
 
         if (paymentDataResult) {
           setPaymentData(paymentDataResult)
