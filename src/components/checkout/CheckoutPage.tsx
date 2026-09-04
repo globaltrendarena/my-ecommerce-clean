@@ -26,8 +26,9 @@ import { FormItem } from '@/components/forms/FormItem'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
-const apiKey = `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`
-const stripe = loadStripe(apiKey)
+// Safe Stripe initialization
+const apiKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+const stripePromise = apiKey ? loadStripe(apiKey) : null
 
 export const CheckoutPage: React.FC = () => {
   const { user } = useAuth()
@@ -35,9 +36,6 @@ export const CheckoutPage: React.FC = () => {
   const { cart } = useCart()
   const [error, setError] = useState<null | string>(null)
   const { theme } = useTheme()
-  /**
-   * State to manage the email input for guest checkout.
-   */
   const [email, setEmail] = useState('')
   const [emailEditable, setEmailEditable] = useState(true)
   const [paymentData, setPaymentData] = useState<null | Record<string, unknown>>(null)
@@ -54,7 +52,6 @@ export const CheckoutPage: React.FC = () => {
     (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
   )
 
-  // On initial load wait for addresses to be loaded and check to see if we can prefill a default one
   useEffect(() => {
     if (!shippingAddress) {
       if (addresses && addresses.length > 0) {
@@ -64,7 +61,7 @@ export const CheckoutPage: React.FC = () => {
         }
       }
     }
-  }, [addresses])
+  }, [addresses, shippingAddress])
 
   useEffect(() => {
     return () => {
@@ -79,7 +76,7 @@ export const CheckoutPage: React.FC = () => {
   const initiatePaymentIntent = useCallback(
     async (paymentID: string) => {
       try {
-        const paymentData = (await initiatePayment(paymentID, {
+        const paymentDataResult = (await initiatePayment(paymentID, {
           additionalData: {
             ...(email ? { customerEmail: email } : {}),
             billingAddress,
@@ -87,15 +84,19 @@ export const CheckoutPage: React.FC = () => {
           },
         })) as Record<string, unknown>
 
-        if (paymentData) {
-          setPaymentData(paymentData)
+        if (paymentDataResult) {
+          setPaymentData(paymentDataResult)
         }
-      } catch (error) {
-        const errorData = error instanceof Error ? JSON.parse(error.message) : {}
+      } catch (err: any) {
         let errorMessage = 'An error occurred while initiating payment.'
 
-        if (errorData?.cause?.code === 'OutOfStock') {
-          errorMessage = 'One or more items in your cart are out of stock.'
+        try {
+          const errorData = err instanceof Error ? JSON.parse(err.message) : {}
+          if (errorData?.cause?.code === 'OutOfStock') {
+            errorMessage = 'One or more items in your cart are out of stock.'
+          }
+        } catch {
+          if (err?.message) errorMessage = err.message
         }
 
         setError(errorMessage)
@@ -104,8 +105,6 @@ export const CheckoutPage: React.FC = () => {
     },
     [billingAddress, billingAddressSameAsShipping, shippingAddress, email, initiatePayment],
   )
-
-  if (!stripe) return null
 
   if (cartIsEmpty && isProcessingPayment) {
     return (
@@ -299,8 +298,7 @@ export const CheckoutPage: React.FC = () => {
         )}
 
         <Suspense fallback={<React.Fragment />}>
-          {/* @ts-ignore */}
-          {paymentData && paymentData?.['clientSecret'] && (
+          {paymentData && paymentData?.['clientSecret'] && stripePromise && (
             <div className="pb-16">
               <h2 className="font-medium text-3xl">Payment</h2>
               {error && <p>{`Error: ${error}`}</p>}
@@ -329,7 +327,7 @@ export const CheckoutPage: React.FC = () => {
                   },
                   clientSecret: paymentData['clientSecret'] as string,
                 }}
-                stripe={stripe}
+                stripe={stripePromise}
               >
                 <div className="flex flex-col gap-8">
                   <CheckoutForm
