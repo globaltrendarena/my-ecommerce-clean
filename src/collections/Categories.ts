@@ -22,9 +22,11 @@ export const Categories: CollectionConfig = {
     },
     {
       name: 'slug',
-      type: 'slug',
-      useAsSlug: 'title',
-      admin: { position: undefined },
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+      },
     },
   ],
 }
